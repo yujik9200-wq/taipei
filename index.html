@@ -240,7 +240,7 @@
         </div>
         <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
           <div class="text-xs font-bold text-slate-400 mb-1">🗣️ 공용 언어</div>
-          <div class="text-lg font-extrabold text-slate-900">중국어 번체</div>
+          <div class="text-lg font-extrabold text-slate-900">중국어(만다린어)</div>
           <div class="text-xs text-slate-500 mt-0.5">관광지 영어·한국어 병기</div>
         </div>
         <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
@@ -291,7 +291,7 @@
         <div class="relative w-full h-[380px] sm:h-[460px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
           <div id="taipei-leaflet-map" class="w-full h-full z-10"></div>
           <div class="absolute bottom-3 left-3 z-20 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 shadow-sm pointer-events-none">
-            🟠 점선: 예스지 순환 동선 (역→예류 50분 · 예류→지우펀 35분 · 지우펀→스펀 30분 · 스펀→역 50분)
+            🟠 점선: 예스지 순환 동선 (역→예류 50분 · 예류→지우펀 50분 · 지우펀→스펀 40분 · 스펀→역 50분)
           </div>
         </div>
 
@@ -579,11 +579,11 @@
 
         <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm">
           <div class="relative h-44 bg-slate-100 img-wrap">
-            <img src="https://ak-d.tripcdn.com/images/1mi3z224x9aafpokw0F74.jpg?proc=resize%2Fm_z%2Cw_600%2Ch_0" onerror="window.handleImgFallback(this)" alt="예류 해산물 정식" class="w-full h-full object-cover" />
-            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🦐</span><span class="text-xs font-bold">예류 해산물 정식</span></div>
+            <img src="https://ak-d.tripcdn.com/images/1mi3z224x9aafpokw0F74.jpg?proc=resize%2Fm_z%2Cw_600%2Ch_0" onerror="window.handleImgFallback(this)" alt="예류 해산물" class="w-full h-full object-cover" />
+            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🦐</span><span class="text-xs font-bold">예류 해산물</span></div>
           </div>
           <div class="p-4">
-            <h3 class="text-base font-extrabold text-slate-900">예류 해산물 정식</h3>
+            <h3 class="text-base font-extrabold text-slate-900">예류 해산물</h3>
             <p class="text-xs text-slate-500 mt-1">예류 바닷가 인근 산지에서 바로 맛보는 신선한 해산물 만찬</p>
           </div>
         </div>
@@ -667,7 +667,7 @@
       <div id="product-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
 
         <!-- 1. ADP903__S -->
-        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="general" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1.5">
@@ -685,9 +685,15 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-700 font-semibold">4성급 호텔</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
-              <span class="text-slate-700 font-semibold">쇼핑 2회 · 예스지/단수이 특가</span>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
+                <span>🎁 옵션 · 쇼핑 2회, $50 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>✔ 스펀 천등 체험 (4인1개) [$30상당]</li>
+                <li>✔ 서문정 투어 (최대 쇼핑거리) [$20상당]</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-slate-200/70">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
@@ -704,7 +710,7 @@
         </article>
 
         <!-- 2. ADP903__M -->
-        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-emerald-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="general" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-emerald-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1.5">
@@ -723,9 +729,16 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-700 font-semibold">4성급 호텔</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
-              <span class="text-emerald-700 font-bold">노쇼핑 · 101전망대($35) 포함</span>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-emerald-700 hover:text-emerald-800 transition cursor-pointer">
+                <span>🎁 옵션 · 노쇼핑, $85 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+                <li>• 서문정(시먼딩) 야간 투어 ($20 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-slate-200/70">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
@@ -743,7 +756,7 @@
         </article>
 
         <!-- 3. ADP903__O -->
-        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="general" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1.5">
@@ -762,9 +775,15 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-700 font-semibold">자오시 온천 1박 + 5성 2연박</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
-              <span class="text-slate-700 font-semibold">쇼핑 2회, $50 상당 포함(스펀천등, 서문정)</span>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
+                <span>🎁 옵션 · 쇼핑 2회, $50 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+                <li>• 서문정(시먼딩) 야간 투어 ($20 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-slate-200/70">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
@@ -783,7 +802,7 @@
         </article>
 
         <!-- 4. ADN903__CA -->
-        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="signature" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1">
@@ -801,7 +820,9 @@
                 ADN903__CA 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">노쇼핑/노옵션/노팁 [5성호텔] 대만/단수이 4/5일</h3>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>[5성호텔] 대만/단수이 4/5일
+            </h3>
           </div>
 
           <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
@@ -809,9 +830,17 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-800 font-bold">5성호텔 3연박</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
-              <span class="text-slate-700 font-semibold">$115 상당 포함 (101전망대·발마사지·스펀천등·서문정)</span>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🎁 옵션 · $115 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+                <li>• 발 마사지 30분 체험 ($30 상당)</li>
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+                <li>• 서문정(시먼딩) 투어 ($20 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-amber-200/60">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
@@ -830,12 +859,12 @@
         </article>
 
         <!-- 5. ADN903__C4 -->
-        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="signature" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1">
                 <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
-                <span class="px-2 py-0.5 rounded-full bg-orange-600 text-white text-[10.5px] font-bold whitespace-nowrap">5성급 온천</span>
+                <span class="px-2 py-0.5 rounded-full bg-orange-600 text-white text-[10.5px] font-bold whitespace-nowrap">양명산 온천</span>
                 <span class="twac-wrap">
                   <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
                   <span class="twac-tooltip">
@@ -848,7 +877,9 @@
                 ADN903__C4 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[양명산 티엔라이 온천/5성호텔] 대만/베이터우 4/5일</h3>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>[양명산 티엔라이 온천/5성호텔] 대만/베이터우 4/5일
+            </h3>
           </div>
 
           <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
@@ -856,9 +887,18 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-800 font-bold">5성호텔 3연박</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
-              <span class="text-slate-700 font-semibold">$160 상당 포함 (티엔라이 온천·101·발마사지·천등)</span>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🎁 옵션 · $160 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 양명산 티엔라이 온천욕 ($45 상당)</li>
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+                <li>• 발 마사지 30분 체험 ($30 상당)</li>
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+                <li>• 서문정(시먼딩) 투어 ($20 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-amber-200/60">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
@@ -881,7 +921,7 @@
         <article
           data-prod-cat="black"
           onclick="openBlackModal()"
-          class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border-2 border-slate-900 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
+          class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border-2 border-slate-900 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
@@ -899,8 +939,10 @@
                 ADM903__CC 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug">시그니처 블랙 · 월드체인 5성 3연박</h3>
-            <p class="text-xs text-slate-500 mt-1.5">NO쇼핑·NO옵션·NO팁 · $145 옵션 · 특식 6회 + 3대 간식</p>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-slate-900 text-amber-300 border border-slate-800 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>[월드체인 5성] 대만/단수이 4일
+            </h3>
+            <p class="text-xs text-slate-500 mt-2">월드체인 5성 3연박 · $145 옵션 · 특식 6회 + 3대 간식</p>
           </div>
 
           <div class="mt-auto pt-4">
@@ -914,7 +956,7 @@
         </article>
 
         <!-- 7. ADN901__PA -->
-        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="signature" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1">
@@ -932,17 +974,27 @@
                 ADN901__PA 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">대만/우라이/예스지 4/5일</h3>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>대만/우라이/예스지 4/5일
+            </h3>
           </div>
 
           <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
             <div class="flex items-start gap-2">
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
-              <span class="text-slate-700 font-semibold">시내 4성급 · 노쇼핑/노옵션</span>
+              <span class="text-slate-700 font-semibold">시내 4성급 · 전일관광</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
-              <span class="text-slate-700 font-semibold">$115 포함 (발마사지·101·천등·서문정)</span>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🎁 옵션 · $115 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+                <li>• 발 마사지 30분 체험 ($30 상당)</li>
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+                <li>• 서문정(시먼딩) 투어 ($20 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-amber-200/60">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
@@ -961,7 +1013,7 @@
         </article>
 
         <!-- 8. ADN901__QA -->
-        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="signature" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1">
@@ -979,7 +1031,9 @@
                 ADN901__QA 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[1일자유] 대만/예스지 4/5일</h3>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>[1일자유] 대만/예스지 4/5일
+            </h3>
           </div>
 
           <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
@@ -987,9 +1041,15 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-700 font-semibold">시내 4성급 · 세미패키지</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
-              <span class="text-slate-700 font-semibold">$65 포함 (101전망대·스펀천등)</span>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🎁 옵션 · $65 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+                <li>• 스펀 천등 날리기 체험 ($30 상당 · 4인 1개)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-amber-200/60">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
@@ -1006,7 +1066,7 @@
         </article>
 
         <!-- 9. ADN901__RA -->
-        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+        <article data-prod-cat="signature" class="product-card h-full min-h-[265px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-1">
@@ -1024,7 +1084,9 @@
                 ADN901__RA 📋
               </button>
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[2일자유] 대만 4/5일</h3>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold align-middle">노쇼핑/노옵션/노팁</span>[2일자유] 대만 4/5일
+            </h3>
           </div>
 
           <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
@@ -1032,9 +1094,14 @@
               <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
               <span class="text-slate-700 font-semibold">시내 4성급 · 자유 비중 UP</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
-              <span class="text-slate-700 font-semibold">$35 포함 (101타워 전망대)</span>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleOption(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🎁 옵션 · $35 상당 옵션 포함</span>
+                <span class="opt-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="opt-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 타이베이 101타워 전망대 ($35 상당)</li>
+              </ul>
             </div>
             <div class="pt-1 border-t border-amber-200/60">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
@@ -1049,7 +1116,7 @@
         </article>
       </div>
 
-      <!-- 10. ADA900 타이베이 자유여행 에어텔 -->
+      <!-- 10. ADA900 타이베이 자유여행 에어텔 (첫 줄 4개 BEST + 아랫줄 2개) -->
       <article data-prod-cat="airtel" class="product-card bg-white rounded-2xl p-5 sm:p-6 border border-sky-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div class="flex flex-wrap items-center gap-2">
@@ -1060,60 +1127,70 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <button type="button" onclick="copyCode('ADA900__A2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">타이베이 이더 호텔</div>
-              <div class="text-[11px] text-slate-500">중산·시내 접근성 우수</div>
+          <!-- 첫 줄 1: 미드타운 (BEST) -->
+          <button type="button" onclick="copyCode('ADA900__F2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-extrabold text-slate-900 truncate">미드타운 리처드슨</span>
+                <span class="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[9.5px] font-extrabold leading-none shrink-0">BEST</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">시먼역 4번출구 초역세권</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__A2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__F2 📋</span>
           </button>
 
-          <button type="button" onclick="copyCode('ADA900__B2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">참참 타이베이</div>
-              <div class="text-[11px] text-slate-500">반차오역 도보권 트렌디 호텔</div>
+          <!-- 첫 줄 2: 참참호텔 (BEST) -->
+          <button type="button" onclick="copyCode('ADA900__B2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-extrabold text-slate-900 truncate">참참 타이베이</span>
+                <span class="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[9.5px] font-extrabold leading-none shrink-0">BEST</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">반차오역 도보권 트렌디 호텔</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__B2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__B2 📋</span>
           </button>
 
-          <button type="button" onclick="copyCode('ADA900__C2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">힐튼 타이베이 신반</div>
-              <div class="text-[11px] text-slate-500">반차오 5성급·루프탑 수영장</div>
+          <!-- 첫 줄 3: 시저 반차오 (BEST) -->
+          <button type="button" onclick="copyCode('ADA900__D2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-extrabold text-slate-900 truncate">시저 파크 반차오</span>
+                <span class="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[9.5px] font-extrabold leading-none shrink-0">BEST</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">반차오역 바로 앞 특급 호텔</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__C2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__D2 📋</span>
           </button>
 
-          <button type="button" onclick="copyCode('ADA900__D2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">시저 파크 반차오</div>
-              <div class="text-[11px] text-slate-500">반차오역 바로 앞 특급 호텔</div>
+          <!-- 첫 줄 4: 힐튼 (BEST) -->
+          <button type="button" onclick="copyCode('ADA900__C2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-extrabold text-slate-900 truncate">힐튼 타이베이 신반</span>
+                <span class="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[9.5px] font-extrabold leading-none shrink-0">BEST</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">반차오 5성급·루프탑 수영장</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__D2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__C2 📋</span>
           </button>
 
-          <button type="button" onclick="copyCode('ADA900__F2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">미드타운 리처드슨</div>
-              <div class="text-[11px] text-slate-500">시먼역 4번출구 초역세권</div>
+          <!-- 아랫줄 1: 시저 메트로 -->
+          <button type="button" onclick="copyCode('ADA900__M2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="text-xs font-extrabold text-slate-900 truncate">시저 메트로 타이베이</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">완화역 직결 대규모 시티뷰</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__F2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__M2 📋</span>
           </button>
 
-          <button type="button" onclick="copyCode('ADA900__G2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">그랜드 하얏트 타이베이</div>
-              <div class="text-[11px] text-slate-500">101타워 바로 옆 럭셔리 5성</div>
+          <!-- 아랫줄 2: 이더호텔 -->
+          <button type="button" onclick="copyCode('ADA900__A2')" class="flex items-center justify-between px-3.5 py-3 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div class="min-w-0 pr-2">
+              <div class="text-xs font-extrabold text-slate-900 truncate">타이베이 이더 호텔</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">중산·시내 접근성 우수</div>
             </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__G2 📋</span>
-          </button>
-
-          <button type="button" onclick="copyCode('ADA900__M2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">시저 메트로 타이베이</div>
-              <div class="text-[11px] text-slate-500">완화역 직결 대규모 시티뷰</div>
-            </div>
-            <span class="text-xs font-extrabold text-emerald-700">ADA900__M2 📋</span>
+            <span class="text-xs font-extrabold text-emerald-700 whitespace-nowrap shrink-0">ADA900__A2 📋</span>
           </button>
         </div>
       </article>
@@ -1218,7 +1295,7 @@
             <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">NO쇼핑 · NO옵션 · NO팁</span>
             <span class="px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-xs font-bold">💬 TWAC 대행 무료 (27.1.1~)</span>
           </div>
-          <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">시그니처 블랙 · 월드체인 5성 3연박</h3>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">노쇼핑/노옵션/노팁 [월드체인 5성] 대만/단수이 4일</h3>
           <p class="text-xs sm:text-sm text-slate-500 mt-1">부모님 효도·VIP 부부 기념일을 위한 대만 최상위 올인원 풀패키지</p>
         </div>
 
@@ -1493,7 +1570,7 @@
 
       var flightsHtml = air.flights.map(function(f) {
         return (
-          '<div class="bg-slate-50 rounded-xl px-3.5 py-2.5 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">' +
+          '<div class="bg-slate-50 rounded-xl px-3.5 py-2.5 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 text-xs items-center">' +
             '<div class="font-bold text-slate-700"><span class="text-sky-600 mr-1.5">출국 🛫</span>' + f.out + '</div>' +
             '<div class="font-bold text-slate-700"><span class="text-rose-600 mr-1.5">귀국 🛬</span>' + f.back + '</div>' +
           '</div>'
@@ -1624,6 +1701,18 @@
       }
     }
 
+    function toggleOption(btn) {
+      if (!btn) return;
+      var detail = btn.parentElement.querySelector('.opt-detail');
+      var arrow = btn.querySelector('.opt-arrow');
+      if (!detail) return;
+      var isHidden = detail.classList.contains('hidden');
+      detail.classList.toggle('hidden', !isHidden);
+      if (arrow) {
+        arrow.textContent = isHidden ? '▲' : '▼';
+      }
+    }
+
     function openBlackModal() {
       var modal = document.getElementById('black-detail-modal');
       if (modal) {
@@ -1693,8 +1782,8 @@
       t101:    { lat: 25.0339, lng: 121.5645, label: '🏙️ 101타워',            bg: '#047857', desc: '신이구 대표 랜드마크 전망대 (높이 508m)' },
       tamsui:  { lat: 25.1756, lng: 121.4329, label: '🏛️ 단수이',              bg: '#d97706', desc: '홍마오청·옛거리·일몰 명소 (시내에서 약 40분)' },
       yehliu:  { lat: 25.2059, lng: 121.6902, label: '🪨 예류',                bg: '#d97706', desc: '여왕머리 바위 지질공원 (타이베이역에서 약 50분)' },
-      jiufen:  { lat: 25.1099, lng: 121.8452, label: '🏮 지우펀',              bg: '#d97706', desc: '붉은 홍등과 찻집 골목 (예류에서 약 35분)' },
-      shifen:  { lat: 25.0423, lng: 121.7766, label: '🎈 스펀',                bg: '#d97706', desc: '기찻길 천등 날리기 체험 (지우펀에서 약 30분)' },
+      jiufen:  { lat: 25.1099, lng: 121.8452, label: '🏮 지우펀',              bg: '#d97706', desc: '붉은 홍등과 찻집 골목 (예류에서 약 50분)' },
+      shifen:  { lat: 25.0423, lng: 121.7766, label: '🎈 스펀',                bg: '#d97706', desc: '기찻길 천등 날리기 체험 (지우펀에서 약 40분)' },
       wulai:   { lat: 24.8648, lng: 121.5513, label: '🌿 우라이',              bg: '#d97706', desc: '80m 절벽 폭포·꼬마열차·원주민 온천마을 (시내 약 50분)' },
       tianlai: { lat: 25.2036, lng: 121.5945, label: '♨️ 양명산·티엔라이',     bg: '#e11d48', desc: '양명산 국립공원 노천 유황 스파 리조트' },
       jiaoxi:  { lat: 24.8282, lng: 121.7728, label: '♨️ 이란 자오시 온천',    bg: '#e11d48', desc: '객실 내 프라이빗 탄산 온천 호텔 밀집 권역' }
@@ -1730,8 +1819,8 @@
       // 예스지 순환 동선 (타이베이역 -> 예류 -> 지우펀 -> 스펀 -> 타이베이역)
       var loopSegments = [
         { from: TAIPEI_PINS.main,   to: TAIPEI_PINS.yehliu, time: '약 50분' },
-        { from: TAIPEI_PINS.yehliu, to: TAIPEI_PINS.jiufen, time: '약 35분' },
-        { from: TAIPEI_PINS.jiufen, to: TAIPEI_PINS.shifen, time: '약 30분' },
+        { from: TAIPEI_PINS.yehliu, to: TAIPEI_PINS.jiufen, time: '약 50분' },
+        { from: TAIPEI_PINS.jiufen, to: TAIPEI_PINS.shifen, time: '약 40분' },
         { from: TAIPEI_PINS.shifen, to: TAIPEI_PINS.main,   time: '약 50분' }
       ];
 
