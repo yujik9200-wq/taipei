@@ -1131,7 +1131,9 @@
         tier: 'primary-right',
         name: '제주항공',
         code: '7C',
-        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeju_Air_logo.svg',
+        logo: 'image_87e9e0.png',
+        logoBackup: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeju_Air_Logo.svg',
+        fallbackWordmark: '<span class="text-[#f36f21] font-black text-xs tracking-tight">제주항공</span>',
         headerBg: 'bg-orange-500',
         borderCol: 'border-orange-300',
         routePillBg: 'bg-orange-50 text-orange-800 border-orange-200',
@@ -1156,7 +1158,9 @@
         tier: 'secondary',
         name: '진에어',
         code: 'LJ',
-        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jin_Air_logo.svg',
+        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Logo_Jin_Air.png',
+        logoBackup: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Logo_Jin_Air.png/320px-Logo_Jin_Air.png',
+        fallbackWordmark: '<span class="text-[#728c00] font-black text-[11px] tracking-tight">JIN AIR</span>',
         headerBg: 'bg-[#bed600]',
         headerTextDark: true,
         borderCol: 'border-lime-300',
@@ -1178,7 +1182,9 @@
         tier: 'secondary',
         name: '트리니티항공',
         code: 'TW',
-        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/T%27way_Air_logo.svg',
+        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Trinity_Airways.svg',
+        logoBackup: 'https://commons.wikimedia.org/wiki/Special:FilePath/Trinity_Airways_logo.png',
+        fallbackWordmark: '<span class="text-[#7a5c4e] font-black text-[11px] tracking-tight">TRINITY</span>',
         headerBg: 'bg-[#8c7365]',
         borderCol: 'border-stone-300',
         routePillBg: 'bg-stone-100 text-stone-800 border-stone-300',
@@ -1199,7 +1205,9 @@
         tier: 'secondary',
         name: '이스타항공',
         code: 'ZE',
-        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Eastar_Jet_logo.svg',
+        logo: 'https://commons.wikimedia.org/wiki/Special:FilePath/Eastar_Jet_Logo.svg',
+        logoBackup: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Eastar_Jet_Logo.svg/320px-Eastar_Jet_Logo.svg.png',
+        fallbackWordmark: '<span class="text-[#c8102e] font-black text-[10.5px] tracking-tight">EASTAR JET</span>',
         headerBg: 'bg-[#c8102e]',
         borderCol: 'border-red-300',
         routePillBg: 'bg-red-50 text-red-800 border-red-200',
@@ -1269,7 +1277,7 @@
                   alt="${a.name} 로고"
                   class="max-w-full max-h-full object-contain"
                 />
-                <span class="img-fallback-box hidden text-[11px] font-black text-slate-800">${a.code}</span>
+                <span class="img-fallback-box hidden text-[11px] font-black text-slate-800">${a.fallbackWordmark || a.code}</span>
               </div>
               <div class="flex items-center gap-1.5 min-w-0">
                 <h3 class="text-sm sm:text-base font-black ${textCol} whitespace-nowrap">${a.name}</h3>
