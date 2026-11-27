@@ -764,7 +764,7 @@
             </div>
             <div class="flex items-start gap-2">
               <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
-              <span class="text-slate-700 font-semibold">쇼핑 2회 · 객실 프라이빗 온천욕</span>
+              <span class="text-slate-700 font-semibold">쇼핑 2회, $50 상당 포함(스펀천등, 서문정)</span>
             </div>
             <div class="pt-1 border-t border-slate-200/70">
               <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
@@ -1480,7 +1480,8 @@
     var isMoreAirlinesOpen = false;
     var currentAirFilter = 'all';
 
-    function buildAirlineCard(air) {
+    function buildAirlineCard(air, extraClass) {
+      var cardExtra = extraClass || '';
       var specialHtml = '';
       if (air.specialBadge) {
         specialHtml =
@@ -1500,8 +1501,8 @@
       }).join('');
 
       return (
-        '<article class="bg-white rounded-2xl overflow-hidden border ' + air.borderCol + ' shadow-sm">' +
-          '<div class="' + air.headerBg + ' px-4 py-3 flex items-center justify-between gap-2 text-white">' +
+        '<article class="bg-white rounded-2xl overflow-hidden border ' + air.borderCol + ' shadow-sm flex flex-col ' + cardExtra + '">' +
+          '<div class="' + air.headerBg + ' px-4 py-3 flex items-center justify-between gap-2 text-white shrink-0">' +
             '<div class="flex items-center gap-2.5 min-w-0">' +
               '<div class="w-24 sm:w-28 h-9 rounded-xl ' + air.logoBg + ' ' + air.logoPad + ' flex items-center justify-center shrink-0 shadow-xs overflow-hidden">' +
                 '<img src="' + air.logoMain + '" data-online="' + air.logoOnline + '" onerror="window.handleLogoFallback(this)" alt="' + air.name + '" class="max-h-6 max-w-full object-contain" />' +
@@ -1517,7 +1518,7 @@
               '<span class="px-3 py-1.5 rounded-full ' + air.mealClass + ' text-[11px] font-extrabold whitespace-nowrap shadow-xs">' + air.mealText + '</span>' +
             '</div>' +
           '</div>' +
-          '<div class="p-4 space-y-2.5">' +
+          '<div class="p-4 flex-1 flex flex-col justify-center gap-2.5">' +
             '<div class="flex items-center justify-between gap-2">' +
               '<span class="inline-block px-3 py-1 rounded-full border ' + air.badgeBg + ' text-xs font-bold">' + air.routeLabel + '</span>' +
             '</div>' +
@@ -1540,8 +1541,23 @@
       var primaryList = filtered.filter(function(a) { return a.group === 'primary'; });
       var secondaryList = filtered.filter(function(a) { return a.group === 'secondary'; });
 
-      primaryGrid.innerHTML = primaryList.map(buildAirlineCard).join('');
-      secondaryGrid.innerHTML = secondaryList.map(buildAirlineCard).join('');
+      // 좌측 열: 대한항공(1개) / 우측 열: 중화항공 + 제주항공(2개 스택)으로 묶어 전체 높이 동일하게 정렬
+      var keAir = primaryList.find(function(a) { return a.id === 'ke'; });
+      var rightStack = primaryList.filter(function(a) { return a.id !== 'ke'; });
+
+      if (keAir && rightStack.length >= 2) {
+        primaryGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch';
+        primaryGrid.innerHTML =
+          buildAirlineCard(keAir, 'h-full') +
+          '<div class="flex flex-col gap-5 h-full">' +
+            rightStack.map(function(air) { return buildAirlineCard(air, 'flex-1'); }).join('') +
+          '</div>';
+      } else {
+        primaryGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch';
+        primaryGrid.innerHTML = primaryList.map(function(air) { return buildAirlineCard(air, 'h-full'); }).join('');
+      }
+
+      secondaryGrid.innerHTML = secondaryList.map(function(air) { return buildAirlineCard(air, ''); }).join('');
 
       if (currentAirFilter === 'all') {
         if (toggleWrap) toggleWrap.classList.remove('hidden');
