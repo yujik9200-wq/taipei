@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>타이베이 한눈에 보기 | MODETOUR · TAIPEI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Leaflet CSS & JS (실제 구글맵 타일 연동 지도) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <script>
+    // 본문 <img> 파싱 즉시 onerror 폴백이 동작하도록 <head>에 최우선 선언
+    window.handleImgFallback = function(img) {
+      try {
+        if (!img) return;
+        var step = parseInt(img.getAttribute('data-step') || '0', 10);
+        var localAlt = img.getAttribute('data-local-alt') || '';
+        var online = img.getAttribute('data-online') || '';
+        var backup = img.getAttribute('data-backup') || '';
+
+        if (step === 0 && localAlt && img.src !== localAlt) {
+          img.setAttribute('data-step', '1');
+          img.src = localAlt;
+          return;
+        }
+        if (step <= 1 && online && img.src !== online) {
+          img.setAttribute('data-step', '2');
+          img.src = online;
+          return;
+        }
+        if (step <= 2 && backup && img.src !== backup) {
+          img.setAttribute('data-step', '3');
+          img.src = backup;
+          return;
+        }
+
+        img.onerror = null;
+        img.classList.add('hidden');
+        var wrap = img.closest('.img-wrap') || img.parentElement;
+        if (wrap) {
+          var fallbackBox = wrap.querySelector('.img-fallback-box');
+          if (fallbackBox) {
+            fallbackBox.classList.remove('hidden');
+          }
+        }
+      } catch (e) {
+        if (img) img.onerror = null;
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      word-break: keep-all;
+      background-color: #f8fafc;
+      color: #0f172a;
+      scroll-behavior: smooth;
+    }
+    /* 지도 핀 & 소요시간 배지 스타일 */
+    .custom-pin-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+      border: 2px solid #ffffff;
+      transform: translate(-50%, -115%);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .custom-pin-label:hover {
+      transform: translate(-50%, -125%) scale(1.05);
+      z-index: 999 !important;
+    }
+    .route-time-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #9a3412;
+      background: #fff7ed;
+      border: 1.5px solid #fb923c;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      transform: translate(-50%, -50%);
+    }
+    /* TWAC 말풍선 툴팁 */
+    .twac-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .twac-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      background: #1e1b4b;
+      color: #ffffff;
+      font-size: 11.5px;
+      line-height: 1.45;
+      padding: 9px 11px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+      z-index: 50;
+      pointer-events: none;
+      transition: opacity 0.18s ease, visibility 0.18s ease;
+    }
+    .twac-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1e1b4b transparent transparent transparent;
+    }
+    .twac-wrap:hover .twac-tooltip,
+    .twac-wrap:focus-within .twac-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-emerald-100 selection:text-emerald-900">
+
+  <!-- 상단 고정 네비게이션 바 -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <a href="#top" class="flex items-center gap-2.5 shrink-0">
+        <span class="w-9 h-9 rounded-xl bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center shadow-sm">TW</span>
+        <div>
+          <span class="block text-[11px] font-bold tracking-wider text-emerald-700 uppercase leading-none">MODETOUR · TAIPEI</span>
+          <span class="block text-base font-extrabold text-slate-900 leading-tight">타이베이 한눈에 보기</span>
+        </div>
+      </a>
+
+      <!-- 섹션 빠른 이동 메뉴 -->
+      <nav class="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-600">
+        <a href="#section-01" class="px-3 py-2 rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition">01 대만 소개</a>
+        <a href="#section-02" class="px-3 py-2 rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition">02 대표 관광지</a>
+        <a href="#section-03" class="px-3 py-2 rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition">03 대만 특식</a>
+        <a href="#section-04" class="px-3 py-2 rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition">04 항공 스케줄</a>
+        <a href="#section-05" class="px-3 py-2 rounded-full bg-emerald-700 text-white hover:bg-emerald-800 transition shadow-sm">05 핵심 4/5일</a>
+        <a href="#section-06" class="px-3 py-2 rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition">06 상담 FAQ</a>
+      </nav>
+
+      <!-- 모바일 섹션 드롭다운 -->
+      <div class="md:hidden">
+        <select onchange="if(this.value) location.hash=this.value;" aria-label="섹션 바로가기" class="text-xs font-bold bg-slate-100 text-slate-800 rounded-xl px-3 py-2 border border-slate-200 focus:outline-none">
+          <option value="#section-01">01 대만 소개</option>
+          <option value="#section-02">02 대표 관광지</option>
+          <option value="#section-03">03 대만 특식</option>
+          <option value="#section-04">04 항공 스케줄</option>
+          <option value="#section-05" selected>05 핵심 4/5일</option>
+          <option value="#section-06">06 상담 FAQ</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- 히어로 배너 -->
+  <section id="top" class="relative overflow-hidden bg-slate-900 text-white">
+    <div class="absolute inset-0 img-wrap">
+      <img
+        src="https://images.pexels.com/photos/3457273/pexels-photo-3457273.jpeg?auto=compress&cs=tinysrgb&w=1600"
+        data-online="https://www.taipei-escape.com/images/destinations/xinyi-taipei-101.jpg"
+        onerror="window.handleImgFallback(this)"
+        alt="타이베이 야경 파노라마"
+        class="w-full h-full object-cover opacity-35"
+      />
+      <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-emerald-950/80 to-slate-900/60"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <div class="max-w-3xl">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold mb-4">
+          <span>🇹🇼</span> 대리점 상담 · 영업 치트키 가이드
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
+          누구나 언제나 대만족,<br class="sm:hidden" />
+          <span class="text-emerald-400">타이베이 핵심 총정리</span>
+        </h1>
+        <p class="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">
+          기초 정보와 예스지 순환 동선 지도부터 대표 관광지·특식, 주력 항공사 패턴(ADM·HARD),<br class="hidden sm:inline" />
+          모두시그니처·시그니처 블랙·일반 패키지·에어텔 상품코드 원클릭 복사까지 한 페이지에 담았습니다.
+        </p>
+
+        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+          <span class="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur border border-white/15">✈️ 비행 2시간 30분</span>
+          <span class="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur border border-white/15">🕒 시차 -1시간</span>
+          <span class="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur border border-white/15">🔌 전압 110V (11자)</span>
+          <span class="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur border border-white/15">🛂 무비자 90일</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 01: 대만 소개 & 타이베이 핵심 지역 지도                           -->
+    <!-- ===================================================================== -->
+    <section id="section-01" class="scroll-mt-20 space-y-8">
+      <div>
+        <span class="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold mb-2">SECTION 01</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">대만 기초 정보 & 핵심 지역 지도</h2>
+        <p class="text-sm text-slate-500 mt-1">상담 시 가장 먼저 안내하는 기본 스펙과 공항·시내·예스지·온천권 실제 동선입니다.</p>
+      </div>
+
+      <!-- 6대 기초 정보 카드 -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">🏙️ 수도 / 면적</div>
+          <div class="text-lg font-extrabold text-slate-900">타이베이</div>
+          <div class="text-xs text-slate-500 mt-0.5">남한의 약 1/3 크기</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">✈️ 비행 / 시차</div>
+          <div class="text-lg font-extrabold text-emerald-700">2시간 30분</div>
+          <div class="text-xs text-slate-500 mt-0.5">한국보다 1시간 느림</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">🗣️ 공용 언어</div>
+          <div class="text-lg font-extrabold text-slate-900">중국어 번체</div>
+          <div class="text-xs text-slate-500 mt-0.5">관광지 영어·한국어 병기</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">💵 화폐 / 환율</div>
+          <div class="text-lg font-extrabold text-slate-900">대만 달러 (TWD)</div>
+          <div class="text-xs text-slate-500 mt-0.5">NT$ 1 ≈ 약 47원</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">🔌 전압 / 콘센트</div>
+          <div class="text-lg font-extrabold text-orange-600">110V (11자)</div>
+          <div class="text-xs text-slate-500 mt-0.5">멀티어댑터 지참 필수</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 mb-1">🌤️ 기후 특징</div>
+          <div class="text-lg font-extrabold text-slate-900">아열대 해양성</div>
+          <div class="text-xs text-slate-500 mt-0.5">여름 29℃ / 겨울 16℃</div>
+        </div>
+      </div>
+
+      <!-- 타이베이 핵심 지역 지도 (예스지 점선 순환 동선 + 소요시간 + 우라이 포함) -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 flex items-center gap-2">
+              <span>🗺️</span> 타이베이 핵심 지역 지도
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              실제 구글맵 기반 위치와 <strong>예스지 순환 동선(타이베이역 ↔ 예류 ↔ 지우펀 ↔ 스펀 ↔ 타이베이역)</strong> 구간별 이동시간을 확인하세요.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <button type="button" onclick="resetTaipeiMap()" class="px-3.5 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer">
+              🗺️ 북부 전체 보기
+            </button>
+            <button type="button" onclick="zoomTaipeiCity()" class="px-3.5 py-2 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition cursor-pointer">
+              🏙️ 타이베이 시내 확대
+            </button>
+            <span class="hidden sm:inline text-slate-300">|</span>
+            <span class="px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200">● 공항</span>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● 시내</span>
+            <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">● 근교·예스지</span>
+            <span class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200">● 온천권</span>
+          </div>
+        </div>
+
+        <!-- 지도 컨테이너 -->
+        <div class="relative w-full h-[380px] sm:h-[460px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+          <div id="taipei-leaflet-map" class="w-full h-full z-10"></div>
+          <div class="absolute bottom-3 left-3 z-20 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 shadow-sm pointer-events-none">
+            🟠 점선: 예스지 순환 동선 (역→예류 50분 · 예류→지우펀 35분 · 지우펀→스펀 30분 · 스펀→역 50분)
+          </div>
+        </div>
+
+        <!-- 하단 거점 빠른 이동 칩 (우라이 포함) -->
+        <div class="mt-3.5 flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="font-bold text-slate-400 mr-1">거점 바로가기:</span>
+          <button type="button" onclick="focusPin('tpe')" class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-semibold transition cursor-pointer">🛬 타오위안 공항</button>
+          <button type="button" onclick="focusPin('tsa')" class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-semibold transition cursor-pointer">🛫 송산 공항</button>
+          <button type="button" onclick="focusPin('main')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold transition cursor-pointer">🚉 타이베이역</button>
+          <button type="button" onclick="focusPin('ximen')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold transition cursor-pointer">🌈 시먼딩</button>
+          <button type="button" onclick="focusPin('t101')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold transition cursor-pointer">🏙️ 101타워</button>
+          <button type="button" onclick="focusPin('tamsui')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition cursor-pointer">🏛️ 단수이</button>
+          <button type="button" onclick="focusPin('yehliu')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition cursor-pointer">🪨 예류</button>
+          <button type="button" onclick="focusPin('jiufen')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition cursor-pointer">🏮 지우펀</button>
+          <button type="button" onclick="focusPin('shifen')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition cursor-pointer">🎈 스펀</button>
+          <button type="button" onclick="focusPin('wulai')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition cursor-pointer">🌿 우라이</button>
+          <button type="button" onclick="focusPin('tianlai')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold transition cursor-pointer">♨️ 양명산·티엔라이</button>
+          <button type="button" onclick="focusPin('jiaoxi')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold transition cursor-pointer">♨️ 이란 자오시 온천</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 02: 대표 관광지 (시내 6곳 + 근교·온천 8곳 / 3열 레이아웃)         -->
+    <!-- ===================================================================== -->
+    <section id="section-02" class="scroll-mt-20 space-y-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span class="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold mb-2">SECTION 02</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">대표 관광지</h2>
+          <p class="text-sm text-slate-500 mt-1">핵심 시내 6곳과 근교·온천 8곳(베이터우·우라이 포함)을 3열 카드 구성으로 한눈에 비교하세요.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 text-xs font-bold">
+          <button type="button" data-spot-filter="all" onclick="filterSpots('all', this)" class="spot-filter-btn px-4 py-2 rounded-full bg-emerald-700 text-white shadow-sm transition cursor-pointer">전체 보기 (14)</button>
+          <button type="button" data-spot-filter="city" onclick="filterSpots('city', this)" class="spot-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">🏙️ 핵심 시내 (6)</button>
+          <button type="button" data-spot-filter="suburb" onclick="filterSpots('suburb', this)" class="spot-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">🏮 근교 · 온천 (8)</button>
+        </div>
+      </div>
+
+      <!-- 핵심 시내 관광지 (6곳 · 3열) -->
+      <div id="spot-group-city" class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-5 rounded-full bg-emerald-600"></span>
+          <h3 class="text-lg font-extrabold text-slate-900">🏙️ 핵심 시내 관광지</h3>
+          <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">6곳</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- 1. 타이베이 101 전망대 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://www.taipei-escape.com/images/destinations/xinyi-taipei-101.jpg" data-online="https://images.pexels.com/photos/3457273/pexels-photo-3457273.jpeg?auto=compress&cs=tinysrgb&w=800" onerror="window.handleImgFallback(this)" alt="타이베이 101 전망대" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🏙️</span><span class="text-xs font-bold">타이베이 101 전망대</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">타이베이 101 전망대</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">타이베이 도심 전체를 발아래 담는 대표 랜드마크</p>
+            </div>
+          </article>
+
+          <!-- 2. 국립 고궁박물관 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://theme.npm.edu.tw/npmArchitecture/common/images/selection/3/4-2/img-4-2.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/National_Palace_Museum_2014.jpg/800px-National_Palace_Museum_2014.jpg" onerror="window.handleImgFallback(this)" alt="국립 고궁박물관" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🏛️</span><span class="text-xs font-bold">국립 고궁박물관</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">국립 고궁박물관</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">세계 4대 박물관! 옥배추(취옥백채)와 동파육 보물 소장</p>
+            </div>
+          </article>
+
+          <!-- 3. 중정기념당 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://images.trvl-media.com/place/508139/b662635a-78b7-47c2-84be-75b041217dcd.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Chiang_Kai-shek_Memorial_Hall_2019.jpg/800px-Chiang_Kai-shek_Memorial_Hall_2019.jpg" onerror="window.handleImgFallback(this)" alt="중정기념당" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🏯</span><span class="text-xs font-bold">중정기념당</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">중정기념당</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">웅장한 푸른 지붕과 절도 있는 근위병 교대식 관람</p>
+            </div>
+          </article>
+
+          <!-- 4. 용산사 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://static.wixstatic.com/media/244a8a_89b86dd0fad246f28099292f94735eae~mv2.jpg/v1/fill/w_1200,h_900,al_c/244a8a_89b86dd0fad246f28099292f94735eae~mv2.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Lungshan_Temple_of_Manka_2018.jpg/800px-Lungshan_Temple_of_Manka_2018.jpg" onerror="window.handleImgFallback(this)" alt="용산사" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🏮</span><span class="text-xs font-bold">용산사</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">용산사</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">화려한 조각과 소원을 비는 타이베이 최고령 사찰</p>
+            </div>
+          </article>
+
+          <!-- 5. 서문정 (시먼딩) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://media.istockphoto.com/id/1566429196/photo/rainbow-road-crossing-in-front-of-ximen-station-exit-6-near-ximending.jpg?s=612x612&w=0&k=20&c=-XxLJR0tU3t0-hHKk6JlvOV2LNcY6JK_tOsNcJJzm00=" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Ximending_Pedestrian_Area_2018.jpg/800px-Ximending_Pedestrian_Area_2018.jpg" onerror="window.handleImgFallback(this)" alt="서문정 시먼딩" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🌈</span><span class="text-xs font-bold">서문정 (시먼딩)</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">서문정 (시먼딩)</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">먹거리·마사지·기념품이 모인 타이베이 최대 번화가</p>
+            </div>
+          </article>
+
+          <!-- 6. 스린 야시장 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://media.istockphoto.com/id/460915609/photo/shilin-night-market-in-taipei-city.jpg?s=612x612&w=0&k=20&c=os-MVFTm_ZVLc84ZVBnGmgksCzz2QKC2WCiSJoVKmLM=" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Shilin_Night_Market_2017.jpg/800px-Shilin_Night_Market_2017.jpg" onerror="window.handleImgFallback(this)" alt="스린 야시장" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🍢</span><span class="text-xs font-bold">스린 야시장</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold backdrop-blur">🏙️ 핵심 시내</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">스린 야시장</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">지파이·큐브스테이크가 가득한 대만 최대 규모 야시장</p>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- 근교 & 온천 관광지 (8곳 · 3열) -->
+      <div id="spot-group-suburb" class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-5 rounded-full bg-amber-500"></span>
+          <h3 class="text-lg font-extrabold text-slate-900">🏮 근교 & 온천 관광지</h3>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">8곳 (예스지·단수이·온천 4권역)</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- 1. 예류 지질공원 -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-sky-50 img-wrap">
+              <img src="https://images.pexels.com/photos/33694160/pexels-photo-33694160/free-photo-of-unique-rock-formation-at-yehliu-geopark-taiwan.jpeg?auto=compress&w=900" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Queen%27s_Head_in_Yehliu_2015.jpg/800px-Queen%27s_Head_in_Yehliu_2015.jpg" onerror="window.handleImgFallback(this)" alt="예류 지질공원" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-amber-50 text-amber-800"><span class="text-3xl mb-1">🪨</span><span class="text-xs font-bold">예류 지질공원</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-600/90 text-white text-[11px] font-bold backdrop-blur">🏮 근교 필수 (예)</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">예류 지질공원</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">파도와 바람이 빚은 여왕머리 바위 등 해안 기암괴석</p>
+            </div>
+          </article>
+
+          <!-- 2. 스펀 (천등 날리기) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://luhuawei.blog/wp-content/uploads/2026/07/55377378651_0c356d73c5_k.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Shifen_Old_Street_Sky_Lanterns.jpg/800px-Shifen_Old_Street_Sky_Lanterns.jpg" onerror="window.handleImgFallback(this)" alt="스펀 천등 날리기" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-amber-50 text-amber-800"><span class="text-3xl mb-1">🎈</span><span class="text-xs font-bold">스펀 (천등 날리기)</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-600/90 text-white text-[11px] font-bold backdrop-blur">🏮 근교 필수 (스)</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">스펀 (천등 날리기)</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">아날로그 기찻길 위에서 소원을 적어 하늘로 띄우는 체험</p>
+            </div>
+          </article>
+
+          <!-- 3. 지우펀 (감성 옛거리) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://whereandwander.com/wp-content/uploads/2024/05/Guide-Visit-Jiufen-A-Mei-Teahouse-How-To-001.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Jiufen_Amei_Teahouse.jpg/800px-Jiufen_Amei_Teahouse.jpg" onerror="window.handleImgFallback(this)" alt="지우펀 감성 옛거리" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-amber-50 text-amber-800"><span class="text-3xl mb-1">🏮</span><span class="text-xs font-bold">지우펀 (감성 옛거리)</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-600/90 text-white text-[11px] font-bold backdrop-blur">🏮 근교 필수 (지)</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">지우펀 (감성 옛거리)</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">붉은 홍등과 바다 조망이 어우러진 레트로 찻집 골목</p>
+            </div>
+          </article>
+
+          <!-- 4. 단수이 (홍마오청·옛거리) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://ak-d.tripcdn.com/images/1mi0n224x9471a8dvCAEB_Q90.jpg?proc=source/trip" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Fort_San_Domingo_2016.jpg/800px-Fort_San_Domingo_2016.jpg" onerror="window.handleImgFallback(this)" alt="단수이 홍마오청" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-amber-50 text-amber-800"><span class="text-3xl mb-1">🏛️</span><span class="text-xs font-bold">단수이 (홍마오청·옛거리)</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-700/90 text-white text-[11px] font-bold backdrop-blur">🌅 근교 감성</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">단수이 (홍마오청·옛거리)</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">영화 '말할 수 없는 비밀' 배경지이자 석양이 아름다운 항구</p>
+            </div>
+          </article>
+
+          <!-- 5. 양명산 티엔라이 온천 (사용자 첨부 이미지 image_3bc89d.jpg 연결 + 안전 폴백) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img
+                src="image_3bc89d.jpg"
+                data-local-alt="image_217bff.jpg"
+                data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Xiaoyoukeng_in_Yangmingshan_National_Park.jpg/800px-Xiaoyoukeng_in_Yangmingshan_National_Park.jpg"
+                onerror="window.handleImgFallback(this)"
+                alt="양명산 티엔라이 온천"
+                class="w-full h-full object-cover"
+              />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-rose-50 text-rose-800"><span class="text-3xl mb-1">♨️</span><span class="text-xs font-bold">양명산 티엔라이 온천</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-rose-600/90 text-white text-[11px] font-bold backdrop-blur">♨️ 노천 온천 스파</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">양명산 티엔라이 온천</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">양명산 국립공원 산림을 바라보며 즐기는 노천 유황 스파</p>
+            </div>
+          </article>
+
+          <!-- 6. 자오시 온천 (이란) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://q-xx.bstatic.com/xdata/images/hotel/max500/880225251.jpg?k=625d273da646c866152247f4cf55cd4b9e66d8012245b7758aace51536c253ca&o=" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Tangweigou_Hot_Spring_Park_2018.jpg/800px-Tangweigou_Hot_Spring_Park_2018.jpg" onerror="window.handleImgFallback(this)" alt="자오시 온천 이란" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-rose-50 text-rose-800"><span class="text-3xl mb-1">🛁</span><span class="text-xs font-bold">자오시 온천 (이란)</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-rose-600/90 text-white text-[11px] font-bold backdrop-blur">♨️ 객실 온천 숙박</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">자오시 온천 (이란)</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">객실 내 프라이빗 욕조에서 즐기는 천연 무색·무취 탄산 온천</p>
+            </div>
+          </article>
+
+          <!-- 7. 베이터우 온천마을 (신규 추가) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Thermal_Valley_Beitou_2019.jpg/800px-Thermal_Valley_Beitou_2019.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Beitou_Public_Library_2014.jpg/800px-Beitou_Public_Library_2014.jpg" onerror="window.handleImgFallback(this)" alt="베이터우 온천마을 지열곡" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-rose-50 text-rose-800"><span class="text-3xl mb-1">♨️</span><span class="text-xs font-bold">베이터우 온천마을</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-rose-600/90 text-white text-[11px] font-bold backdrop-blur">♨️ 도심 온천마을</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">베이터우 온천마을</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">옥빛 유황 온천수가 끓어오르는 지열곡과 친환경 목조 도서관</p>
+            </div>
+          </article>
+
+          <!-- 8. 우라이 마을 (신규 추가) -->
+          <article class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition">
+            <div class="relative h-52 bg-slate-100 img-wrap">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Wulai_Waterfall_2018.jpg/800px-Wulai_Waterfall_2018.jpg" data-online="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wulai_Old_Street_2016.jpg/800px-Wulai_Old_Street_2016.jpg" onerror="window.handleImgFallback(this)" alt="우라이 마을 폭포" class="w-full h-full object-cover" />
+              <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-emerald-50 text-emerald-800"><span class="text-3xl mb-1">🌿</span><span class="text-xs font-bold">우라이 마을</span></div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-emerald-700/90 text-white text-[11px] font-bold backdrop-blur">🌿 산간 온천·폭포</span>
+            </div>
+            <div class="p-4">
+              <h4 class="text-base font-extrabold text-slate-900">우라이 마을</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">80m 절벽 폭포와 귀여운 꼬마열차, 아타얄족 원주민 옛거리</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 03: 대만 대표 특식 (관광지와 분리 · 4종)                         -->
+    <!-- ===================================================================== -->
+    <section id="section-03" class="scroll-mt-20 space-y-6">
+      <div>
+        <span class="inline-block px-2.5 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-extrabold mb-2">SECTION 03</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">대만 대표 특식 (4종)</h2>
+        <p class="text-sm text-slate-500 mt-1">한국인 여행객 만족도가 가장 높은 패키지 핵심 특식 라인업입니다.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm">
+          <div class="relative h-44 bg-slate-100 img-wrap">
+            <img src="https://img.sndimg.com/food/image/upload/f_auto,c_thumb,q_55,w_iw/v1/img/recipes/46/96/12/ZjK6w7d3Soa4y9kLqsOr_DIN_TAI_FUNG_STYLE_XIAO_LONG_BAO_SOUP_DUMPLINGS_025.jpg" onerror="window.handleImgFallback(this)" alt="딘타이펑 딤섬" class="w-full h-full object-cover" />
+            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🥟</span><span class="text-xs font-bold">딘타이펑 딤섬</span></div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-base font-extrabold text-slate-900">딘타이펑 딤섬</h3>
+            <p class="text-xs text-slate-500 mt-1">진한 육즙을 품은 세계적 명성의 대만 소룡포 딤섬</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm">
+          <div class="relative h-44 bg-slate-100 img-wrap">
+            <img src="https://thesoundofcooking.com/wp-content/uploads/2024/06/taiwanese-hot-pot_The-Sound-of-Cooking.jpg" onerror="window.handleImgFallback(this)" alt="대만식 샤브샤브" class="w-full h-full object-cover" />
+            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🍲</span><span class="text-xs font-bold">대만식 샤브샤브</span></div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-base font-extrabold text-slate-900">대만식 샤브샤브 (훠궈)</h3>
+            <p class="text-xs text-slate-500 mt-1">신선한 야채와 고기를 무제한으로 즐기는 담백한 전골</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm">
+          <div class="relative h-44 bg-slate-100 img-wrap">
+            <img src="https://ak-d.tripcdn.com/images/1mi3z224x9aafpokw0F74.jpg?proc=resize%2Fm_z%2Cw_600%2Ch_0" onerror="window.handleImgFallback(this)" alt="예류 해산물 정식" class="w-full h-full object-cover" />
+            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🦐</span><span class="text-xs font-bold">예류 해산물 정식</span></div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-base font-extrabold text-slate-900">예류 해산물 정식</h3>
+            <p class="text-xs text-slate-500 mt-1">예류 바닷가 인근 산지에서 바로 맛보는 신선한 해산물 만찬</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm">
+          <div class="relative h-44 bg-slate-100 img-wrap">
+            <img src="https://i.natgeofe.com/n/96529a87-df95-4fbf-809c-9ff235107d2d/resized-M_CHEN_JIUFEN_FINAL_6.jpg" onerror="window.handleImgFallback(this)" alt="지우펀 해열루" class="w-full h-full object-cover" />
+            <div class="img-fallback-box hidden w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-800"><span class="text-3xl mb-1">🏮</span><span class="text-xs font-bold">지우펀 해열루</span></div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-base font-extrabold text-slate-900">지우펀 해열루</h3>
+            <p class="text-xs text-slate-500 mt-1">아메이차루와 지우펀 바다를 함께 조망하는 뷰 맛집 현지식</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 04: 항공사별 취항 패턴 & 스케줄 (접기 기능 + 간결화 적용)          -->
+    <!-- ===================================================================== -->
+    <section id="section-04" class="scroll-mt-20 space-y-6">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div>
+          <span class="inline-block px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-extrabold mb-2">SECTION 04</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">항공사별 취항 패턴 & 스케줄</h2>
+          <p class="text-sm text-slate-500 mt-1">주요 7개 취항 항공사의 노선·편명·시간표 및 계약석(★ ADM / ★ HARD) 현황입니다.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 text-xs font-bold">
+          <button type="button" data-air-filter="all" onclick="filterAirlines('all', this)" class="air-filter-btn px-4 py-2 rounded-full bg-slate-900 text-white shadow-sm transition cursor-pointer">전체 (7개사)</button>
+          <button type="button" data-air-filter="tpe" onclick="filterAirlines('tpe', this)" class="air-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">인천 ↔ 타오위안</button>
+          <button type="button" data-air-filter="tsa" onclick="filterAirlines('tsa', this)" class="air-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">김포 ↔ 송산</button>
+          <button type="button" data-air-filter="rmq" onclick="filterAirlines('rmq', this)" class="air-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">인천 ↔ 타이중</button>
+        </div>
+      </div>
+
+      <!-- 주력 3사 (대한항공 / 중화항공 · 제주항공) -->
+      <div id="primary-airlines-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start"></div>
+
+      <!-- 기타 4개사 더보기/접기 컨트롤 -->
+      <div id="secondary-airlines-toggle-wrap" class="pt-1">
+        <button
+          type="button"
+          id="toggle-more-airlines-btn"
+          onclick="toggleMoreAirlines()"
+          class="w-full py-3.5 px-5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 shadow-sm text-xs sm:text-sm font-extrabold text-slate-700 flex items-center justify-center gap-2 transition cursor-pointer"
+        >
+          <span id="toggle-more-airlines-text">✈️ 기타 취항 항공사 더보기 (진에어 · 트리니티 · 이스타 · 스쿠트 4개사)</span>
+          <span id="toggle-more-airlines-icon" class="text-slate-400 transition-transform duration-200">▼</span>
+        </button>
+      </div>
+
+      <!-- 접히는 기타 4개사 컨테이너 -->
+      <div id="secondary-airlines-grid" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-5 items-start"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 05: 대만 타이베이 핵심 4/5일 (1줄 3개 · 말풍선 구분 · 식사 접기)   -->
+    <!-- ===================================================================== -->
+    <section id="section-05" class="scroll-mt-20 space-y-6">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div>
+          <span class="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold mb-2">SECTION 05</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">대만 타이베이 핵심 4/5일</h2>
+          <p class="text-sm text-slate-500 mt-1">
+            초록색 상품코드 버튼을 누르면 예약창 검색용 코드가 즉시 복사됩니다. (식사란 클릭 시 상세 메뉴 펼침)
+          </p>
+        </div>
+
+        <!-- 카테고리 필터 -->
+        <div class="flex flex-wrap gap-2 text-xs font-bold">
+          <button type="button" data-prod-filter="all" onclick="filterProducts('all', this)" class="prod-filter-btn px-3.5 py-2 rounded-full bg-emerald-700 text-white shadow-sm transition cursor-pointer">전체 라인업 (10코드)</button>
+          <button type="button" data-prod-filter="general" onclick="filterProducts('general', this)" class="prod-filter-btn px-3.5 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">🛍️ 일반 패키지 (3)</button>
+          <button type="button" data-prod-filter="signature" onclick="filterProducts('signature', this)" class="prod-filter-btn px-3.5 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">⭐ 모두시그니처 (5)</button>
+          <button type="button" data-prod-filter="black" onclick="filterProducts('black', this)" class="prod-filter-btn px-3.5 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">👑 시그니처 블랙 (1)</button>
+          <button type="button" data-prod-filter="airtel" onclick="filterProducts('airtel', this)" class="prod-filter-btn px-3.5 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">✈️ 에어텔 (1)</button>
+        </div>
+      </div>
+
+      <!-- 1줄 3개 상품 카드 그리드 (9개 패키지/시그니처 · 행별 동일 높이 정렬) -->
+      <div id="product-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+
+        <!-- 1. ADP903__S -->
+        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-bold whitespace-nowrap">일반 패키지</span>
+              </div>
+              <button type="button" onclick="copyCode('ADP903__S')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADP903__S 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">대만/단수이 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">4성급 호텔</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
+              <span class="text-slate-700 font-semibold">쇼핑 2회 · 예스지/단수이 특가</span>
+            </div>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 3회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딤섬</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 샤브샤브</li>
+                <li>• 여행 중 든든한 식사 한식 불고기</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2. ADP903__M -->
+        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-emerald-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-bold whitespace-nowrap">일반 패키지</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-bold whitespace-nowrap">베스트셀러</span>
+              </div>
+              <button type="button" onclick="copyCode('ADP903__M')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADP903__M 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[노쇼핑/101전망대] 대만/단수이 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">4성급 호텔</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
+              <span class="text-emerald-700 font-bold">노쇼핑 · 101전망대($35) 포함</span>
+            </div>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 4회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 무제한 샤브샤브</li>
+                <li>• 여행 중 든든한 식사 한식 불고기</li>
+                <li>• 예류 현지의 신선한 요리 예류 해산물</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3. ADP903__O -->
+        <article data-prod-cat="general" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-bold whitespace-nowrap">일반 패키지</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[11px] font-bold whitespace-nowrap">온천숙박</span>
+              </div>
+              <button type="button" onclick="copyCode('ADP903__O')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADP903__O 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[자오시 온천+카발란 위스키 증류소] 대만 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">자오시 온천 1박 + 5성 2연박</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🛍️ 조건</span>
+              <span class="text-slate-700 font-semibold">쇼핑 2회, $50 상당 포함(스펀천등, 서문정)</span>
+            </div>
+            <div class="pt-1 border-t border-slate-200/70">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-emerald-700 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 4회 + 버블티</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 샤브샤브</li>
+                <li>• 여행 중 든든한 식사 무제한 삼겹살</li>
+                <li>• 예류 현지의 신선한 요리 예류 해산물</li>
+                <li>• 대만 대표 간식 버블티(1인1잔)</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4. ADN903__CA -->
+        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
+                <span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10.5px] font-bold whitespace-nowrap">스테디 셀러</span>
+                <span class="twac-wrap">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="copyCode('ADN903__CA')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADN903__CA 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">노쇼핑/노옵션/노팁 [5성호텔] 대만/단수이 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-800 font-bold">5성호텔 3연박</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
+              <span class="text-slate-700 font-semibold">$115 상당 포함 (101전망대·발마사지·스펀천등·서문정)</span>
+            </div>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 5회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 지우펀 뷰 맛집 해열루(현지식)</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 샤브샤브 무제한(궈바 훠궈)</li>
+                <li>• 여행 중 든든한 식사 무제한 삼겹살</li>
+                <li>• 예류 현지에서 맛보는 해산물 요리 예류 해산물</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5. ADN903__C4 -->
+        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
+                <span class="px-2 py-0.5 rounded-full bg-orange-600 text-white text-[10.5px] font-bold whitespace-nowrap">5성급 온천</span>
+                <span class="twac-wrap">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="copyCode('ADN903__C4')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADN903__C4 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[양명산 티엔라이 온천/5성호텔] 대만/베이터우 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-800 font-bold">5성호텔 3연박</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
+              <span class="text-slate-700 font-semibold">$160 상당 포함 (티엔라이 온천·101·발마사지·천등)</span>
+            </div>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 5회 + 펑리수</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 지우펀 뷰 맛집 해열루(현지식)</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 샤브샤브 무제한(궈바 훠궈)</li>
+                <li>• 여행 중 든든한 식사 무제한 삼겹살</li>
+                <li>• 예류 현지에서 맛보는 해산물 요리 예류 해산물</li>
+                <li>• 대만 대표 간식🍍펑리수 객실당 1박스(4개입)</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6. ADM903__CC (시그니처 블랙 · 흰색 바탕 + 클릭 시 대형 모달 크게 보기) -->
+        <article
+          data-prod-cat="black"
+          onclick="openBlackModal()"
+          class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border-2 border-slate-900 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
+        >
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-slate-900 text-amber-300 text-[10.5px] font-bold whitespace-nowrap">👑 시그니처 블랙</span>
+                <span class="twac-wrap" onclick="event.stopPropagation()">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="event.stopPropagation(); copyCode('ADM903__CC')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADM903__CC 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug">시그니처 블랙 · 월드체인 5성 3연박</h3>
+            <p class="text-xs text-slate-500 mt-1.5">NO쇼핑·NO옵션·NO팁 · $145 옵션 · 특식 6회 + 3대 간식</p>
+          </div>
+
+          <div class="mt-auto pt-4">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-500">상세 혜택 접힘 상태</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-900 text-amber-300 text-xs font-extrabold whitespace-nowrap">
+                🔍 크게 보기 ↗
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7. ADN901__PA -->
+        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10.5px] font-bold whitespace-nowrap">전일관광</span>
+                <span class="twac-wrap">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="copyCode('ADN901__PA')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADN901__PA 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">대만/우라이/예스지 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">시내 4성급 · 노쇼핑/노옵션</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
+              <span class="text-slate-700 font-semibold">$115 포함 (발마사지·101·천등·서문정)</span>
+            </div>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 5회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 지우펀 뷰 맛집 해열루(현지식)</li>
+                <li>• 신선한 야채와 고기를 즐길 수 있는 타카오 샤브샤브 무제한</li>
+                <li>• 여행 중 든든한 식사 무제한 삼겹살</li>
+                <li>• 예류 현지에서 맛보는 해산물 요리 예류 해산물</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 8. ADN901__QA -->
+        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10.5px] font-bold whitespace-nowrap">1일 자유</span>
+                <span class="twac-wrap">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="copyCode('ADN901__QA')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADN901__QA 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[1일자유] 대만/예스지 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">시내 4성급 · 세미패키지</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
+              <span class="text-slate-700 font-semibold">$65 포함 (101전망대·스펀천등)</span>
+            </div>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 3회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬</li>
+                <li>• 지우펀 뷰 맛집 해열루(현지식)</li>
+                <li>• 예류 현지에서 맛보는 해산물 요리 예류 해산물</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 9. ADN901__RA -->
+        <article data-prod-cat="signature" class="product-card h-full min-h-[255px] bg-white rounded-2xl p-5 border border-amber-300/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10.5px] font-bold whitespace-nowrap">모두시그니처</span>
+                <span class="px-2 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-300 text-[10.5px] font-bold whitespace-nowrap">2일 자유</span>
+                <span class="twac-wrap">
+                  <span tabindex="0" class="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[10.5px] font-bold whitespace-nowrap cursor-help">💬 TWAC</span>
+                  <span class="twac-tooltip">
+                    <strong>2027.01.01~ 시행 무료 지원</strong><br />
+                    시그니처·시그니처 블랙·인센티브단체 온라인 입국신고서(TWAC) 대행 무료 (출발 3일 전 담당자 신청)
+                  </span>
+                </span>
+              </div>
+              <button type="button" onclick="copyCode('ADN901__RA')" class="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold whitespace-nowrap shrink-0 transition cursor-pointer">
+                ADN901__RA 📋
+              </button>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-3">[2일자유] 대만 4/5일</h3>
+          </div>
+
+          <div class="mt-auto bg-amber-50/50 rounded-xl p-3.5 space-y-2 text-xs border border-amber-100">
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🏨 숙박</span>
+              <span class="text-slate-700 font-semibold">시내 4성급 · 자유 비중 UP</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-slate-400 font-bold shrink-0">🎁 옵션</span>
+              <span class="text-slate-700 font-semibold">$35 포함 (101타워 전망대)</span>
+            </div>
+            <div class="pt-1 border-t border-amber-200/60">
+              <button type="button" onclick="toggleMeal(this)" class="w-full flex items-center justify-between text-left font-bold text-slate-700 hover:text-amber-800 transition cursor-pointer">
+                <span>🍽️ 식사 · 특식 1회</span>
+                <span class="meal-arrow text-[10px] text-slate-400">▼</span>
+              </button>
+              <ul class="meal-detail hidden mt-2 space-y-1 pl-1 text-[11.5px] text-slate-600 leading-relaxed">
+                <li>• 담백하고 진한 육즙을 품은 딘타이펑 딤섬🥟</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- 10. ADA900 타이베이 자유여행 에어텔 -->
+      <article data-prod-cat="airtel" class="product-card bg-white rounded-2xl p-5 sm:p-6 border border-sky-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 py-1 rounded-full bg-sky-600 text-white text-xs font-bold">자유여행 · 에어텔</span>
+            <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">타이베이 자유여행 에어텔</h3>
+          </div>
+          <span class="text-xs font-bold text-sky-700">호텔별 버튼 클릭 시 마스터코드 즉시 복사</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <button type="button" onclick="copyCode('ADA900__A2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">타이베이 이더 호텔</div>
+              <div class="text-[11px] text-slate-500">중산·시내 접근성 우수</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__A2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__B2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">참참 타이베이</div>
+              <div class="text-[11px] text-slate-500">반차오역 도보권 트렌디 호텔</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__B2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__C2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">힐튼 타이베이 신반</div>
+              <div class="text-[11px] text-slate-500">반차오 5성급·루프탑 수영장</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__C2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__D2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">시저 파크 반차오</div>
+              <div class="text-[11px] text-slate-500">반차오역 바로 앞 특급 호텔</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__D2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__F2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">미드타운 리처드슨</div>
+              <div class="text-[11px] text-slate-500">시먼역 4번출구 초역세권</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__F2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__G2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">그랜드 하얏트 타이베이</div>
+              <div class="text-[11px] text-slate-500">101타워 바로 옆 럭셔리 5성</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__G2 📋</span>
+          </button>
+
+          <button type="button" onclick="copyCode('ADA900__M2')" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200/80 text-left transition cursor-pointer">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">시저 메트로 타이베이</div>
+              <div class="text-[11px] text-slate-500">완화역 직결 대규모 시티뷰</div>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-700">ADA900__M2 📋</span>
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 06: 대리점 상담 치트키 FAQ                                      -->
+    <!-- ===================================================================== -->
+    <section id="section-06" class="scroll-mt-20 space-y-6">
+      <div>
+        <span class="inline-block px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 text-xs font-extrabold mb-2">SECTION 06</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">대리점 상담 치트키 FAQ</h2>
+        <p class="text-sm text-slate-500 mt-1">출발 전 필수 고지사항과 현장 단골 질문을 클릭해 바로 확인하세요.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <details open class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q1. 비자 및 온라인 입국신고서(TWAC) 안내</span>
+            <span class="text-emerald-600 text-xs font-bold">필수 고지</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            대한민국 여권 소지자는 <strong>무비자 90일 체류</strong>가 가능하며, 출발일 기준 <strong>여권 유효기간 6개월 이상</strong> 남아 있어야 합니다.<br />
+            출발 전 온라인 입국신고서(TWAC) 작성이 필요하며, <strong>2027년 1월 1일 출발부터 시그니처 · 시그니처 블랙 · 인센티브단체는 입국신고서 대행을 무료 지원</strong>합니다. (출발 3일 전 예약 담당자 신청)
+          </p>
+        </details>
+
+        <details open class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q2. 호텔 일회용 어메니티 미제공 규정</span>
+            <span class="text-amber-600 text-xs font-bold">환경 규제</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            대만 환경부 일회용품 규제에 따라 호텔 객실 내 <strong>칫솔·치약·면도기·빗 등 일회용 세면도구가 비치되어 있지 않습니다.</strong> (대용량 샴푸·바디워시는 제공) 출발 전 개인 세면도구 지참을 꼭 안내해 주세요.
+          </p>
+        </details>
+
+        <details class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q3. 현지 전압(110V) 및 변환 어댑터</span>
+            <span class="text-orange-600 text-xs font-bold">준비물</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            대만은 <strong>110V (납작한 11자형 2핀)</strong> 콘센트를 사용합니다. 한국 220V 전자기기 충전을 위해 <strong>멀티어댑터</strong>를 반드시 준비하셔야 합니다.
+          </p>
+        </details>
+
+        <details class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q4. 날씨 및 계절별 옷차림 팁</span>
+            <span class="text-sky-600 text-xs font-bold">현지 팁</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            해양성 기후 특성상 <strong>작은 접이식 우산</strong>은 사계절 필수입니다. 12월~2월 겨울철에는 영상 14~18℃라도 습도 때문에 체감온도가 쌀쌀하므로 <strong>경량 패딩이나 도톰한 겉옷</strong>을 권장합니다.
+          </p>
+        </details>
+
+        <details class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q5. 일반 패키지 vs 모두시그니처 핵심 차이</span>
+            <span class="text-emerald-600 text-xs font-bold">세일즈 포인트</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            모두시그니처는 <strong>NO쇼핑 · NO옵션 · 가이드/기사 경비 포함</strong>이 기본이며, 101전망대·스펀천등·발마사지 등 <strong>인기 유료 옵션($65~$160 상당)과 대표 특식</strong>이 선포함되어 현지 추가 지출 부담이 없습니다.
+          </p>
+        </details>
+
+        <details class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <summary class="font-extrabold text-slate-900 text-sm sm:text-base cursor-pointer list-none flex items-center justify-between">
+            <span>Q6. 스펀 천등 날리기 수량 기준</span>
+            <span class="text-rose-600 text-xs font-bold">클레임 예방</span>
+          </summary>
+          <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+            패키지에 포함된 스펀 천등 날리기 체험은 기본 <strong>4인 1개 기준</strong>으로 제공됩니다. 2인 예약 시 다른 일행과 함께 날릴 수 있음을 사전 안내해 주시면 현장 오해를 예방할 수 있습니다.
+          </p>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="bg-slate-900 text-slate-400 py-8 mt-16 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-emerald-700 text-white font-bold">MODETOUR</span>
+        <span class="font-semibold text-slate-300">타이베이 대리점 영업 · 상담 가이드</span>
+      </div>
+      <p>본 페이지의 상품코드 및 스케줄은 예약 시점 및 항공 사정에 따라 일부 변동될 수 있습니다.</p>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- 시그니처 블랙 (ADM903__CC) 상세 크게 보기 모달                           -->
+  <!-- ===================================================================== -->
+  <div id="black-detail-modal" onclick="if(event.target===this) closeBlackModal()" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 border-2 border-slate-900 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="px-3 py-1 rounded-full bg-slate-900 text-amber-300 text-xs font-extrabold">👑 시그니처 블랙</span>
+            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">NO쇼핑 · NO옵션 · NO팁</span>
+            <span class="px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-xs font-bold">💬 TWAC 대행 무료 (27.1.1~)</span>
+          </div>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">시그니처 블랙 · 월드체인 5성 3연박</h3>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">부모님 효도·VIP 부부 기념일을 위한 대만 최상위 올인원 풀패키지</p>
+        </div>
+
+        <button type="button" onclick="closeBlackModal()" aria-label="닫기" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center shrink-0 cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm mb-6">
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+          <div class="font-extrabold text-slate-900 mb-2">🏅 숙박 & 프리미엄 원칙</div>
+          <ul class="space-y-1.5 text-slate-600">
+            <li>• <strong>월드체인 5성급 호텔</strong> 짐 이동 없는 3연박</li>
+            <li>• 쇼핑센터 방문 0회 (NO쇼핑)</li>
+            <li>• 가이드·기사 경비 포함 (NO팁)</li>
+            <li>• 2027.01.01~ TWAC 입국신고 대행 무료 지원</li>
+          </ul>
+        </div>
+
+        <div class="bg-amber-50/70 rounded-2xl p-4 border border-amber-200/80">
+          <div class="font-extrabold text-amber-900 mb-2">🎁 인기옵션 $145 상당 포함</div>
+          <ul class="space-y-1.5 text-slate-700">
+            <li>• <strong>전신마사지 60분</strong> ($60 상당 업그레이드)</li>
+            <li>• <strong>타이베이 101 전망대</strong> ($35 상당)</li>
+            <li>• <strong>스펀 천등 날리기</strong> (4인 1개 / $30 상당)</li>
+            <li>• <strong>서문정 투어</strong> ($20 상당)</li>
+          </ul>
+        </div>
+
+        <div class="sm:col-span-2 bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80">
+          <div class="font-extrabold text-emerald-900 mb-2">🍴 대만 미식 풀코스 (특식 6회 + 대만 3대 간식)</div>
+          <p class="text-slate-700 leading-relaxed mb-2">
+            <strong>• 특식 6회:</strong> 딘타이펑 딤섬 · 지우펀 아메이차관 · 궈바 훠궈 · 단수이 홍로우 · 예류 해산물 · 우육면
+          </p>
+          <p class="text-slate-700 leading-relaxed">
+            <strong>• 대만 3대 간식:</strong> 🍍 펑리수 (객실당 1박스) · 🧋 버블티 (1인 1잔) · 🥭 망고빙수 (2인 1개)
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
+        <span class="text-xs text-slate-500">예약창에서 아래 마스터코드로 바로 조회하세요.</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="copyCode('ADM903__CC')" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-sm transition cursor-pointer">
+            ADM903__CC 코드 복사 📋
+          </button>
+          <button type="button" onclick="closeBlackModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 복사 완료 토스트 메시지 -->
+  <div id="copy-toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full bg-slate-900 text-white text-xs font-extrabold shadow-xl opacity-0 pointer-events-none transition-opacity duration-200">
+    상품코드가 복사되었습니다!
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. SECTION 04 항공사 로고 폴백 핸들러
+    // =========================================================================
+    window.handleLogoFallback = function(img) {
+      try {
+        if (!img) return;
+        var step = parseInt(img.getAttribute('data-step') || '0', 10);
+        var online = img.getAttribute('data-online') || '';
+        if (step === 0 && online && img.src !== online) {
+          img.setAttribute('data-step', '1');
+          img.src = online;
+          return;
+        }
+        img.onerror = null;
+        img.classList.add('hidden');
+        var wrap = img.parentElement;
+        if (wrap) {
+          var fb = wrap.querySelector('.logo-svg-fallback');
+          if (fb) fb.classList.remove('hidden');
+        }
+      } catch (e) {
+        if (img) img.onerror = null;
+      }
+    };
+
+    // =========================================================================
+    // 2. SECTION 04 항공사 데이터 (주력 3사 + 접히는 4대 LCC)
+    // =========================================================================
+    var AIRLINES = [
+      {
+        id: 'ke',
+        group: 'primary',
+        name: '대한항공',
+        code: 'KE',
+        routes: ['tpe', 'rmq'],
+        headerBg: 'bg-sky-500',
+        borderCol: 'border-sky-200',
+        badgeBg: 'bg-sky-50 text-sky-800 border-sky-200',
+        routeLabel: '인천 ↔ 타오위안 / 타이중 (3박 4일)',
+        mealText: '기내식 포함',
+        mealClass: 'bg-white text-sky-700',
+        specialBadge: null,
+        logoMain: 'https://commons.wikimedia.org/wiki/Special:FilePath/Korean_Air_2025.svg',
+        logoOnline: 'https://commons.wikimedia.org/wiki/Special:FilePath/KoreanAir_logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 132 28" class="w-full h-5"><circle cx="14" cy="14" r="9" fill="none" stroke="#00256C" stroke-width="2.2"/><path d="M8 14c3-5 9-5 12 0c-3 5-9 5-12 0z" fill="#00256C"/><text x="28" y="18.5" font-family="Inter,sans-serif" font-weight="800" font-size="11.5" fill="#00256C" letter-spacing="0.4">KOREAN AIR</text></svg>',
+        flights: [
+          { out: 'KE2021 인천 08:00 → 타오위안 09:50', back: 'KE2022 타오위안 11:05 → 인천 14:40' },
+          { out: 'KE2025 인천 09:00 → 타오위안 11:00', back: 'KE2026 타오위안 12:25 → 인천 15:50' },
+          { out: 'KE2027 인천 13:40 → 타오위안 15:45', back: 'KE2028 타오위안 17:10 → 인천 20:35' },
+          { out: 'KE2029 인천 16:20 → 타오위안 18:10', back: 'KE2030 타오위안 19:25 → 인천 22:55' },
+          { out: 'KE2031 인천 14:15 → 타이중 16:25', back: 'KE2032 타이중 17:50 → 인천 21:30' }
+        ]
+      },
+      {
+        id: 'ci',
+        group: 'primary',
+        name: '중화항공',
+        code: 'CI',
+        routes: ['tpe'],
+        headerBg: 'bg-rose-700',
+        borderCol: 'border-rose-200',
+        badgeBg: 'bg-rose-50 text-rose-800 border-rose-200',
+        routeLabel: '인천 ↔ 타오위안 (3박 4일)',
+        mealText: '기내식 포함',
+        mealClass: 'bg-white text-rose-800',
+        specialBadge: {
+          title: '★ ADM',
+          sub: '11/01~03/27<br>일별 16석'
+        },
+        logoMain: 'https://en.wikipedia.org/wiki/Special:FilePath/China_Airlines.svg',
+        logoOnline: 'https://commons.wikimedia.org/wiki/Special:FilePath/China_Airlines_logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 136 28" class="w-full h-5"><circle cx="14" cy="14" r="8" fill="#F472B6" opacity="0.85"/><circle cx="17" cy="12" r="5" fill="#BE185D" opacity="0.65"/><text x="28" y="18.5" font-family="Inter,sans-serif" font-weight="800" font-size="11" fill="#1E3A8A" letter-spacing="0.3">CHINA AIRLINES</text></svg>',
+        flights: [
+          { out: 'CI161 인천 12:30 → 타오위안 14:20', back: 'CI162 타오위안 15:45 → 인천 19:15' }
+        ]
+      },
+      {
+        id: '7c',
+        group: 'primary',
+        name: '제주항공',
+        code: '7C',
+        routes: ['tpe'],
+        headerBg: 'bg-orange-500',
+        borderCol: 'border-orange-200',
+        badgeBg: 'bg-orange-50 text-orange-800 border-orange-200',
+        routeLabel: '인천 ↔ 타오위안 (3박 4일)',
+        mealText: '기내식 불포함',
+        mealClass: 'bg-white text-orange-700',
+        specialBadge: {
+          title: '★ HARD',
+          sub: '12/21~31·03/01~11: 36석<br>01/01~02/28: 44석'
+        },
+        logoMain: 'image_87e9e0.png',
+        logoOnline: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeju_Air_Logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 110 28" class="w-full h-5"><text x="55" y="20" text-anchor="middle" font-family="Noto Sans KR,sans-serif" font-weight="800" font-size="16" fill="#EA580C" letter-spacing="1">제주항공</text></svg>',
+        flights: [
+          { out: '7C6101 인천 10:40 → 타오위안 12:35', back: '7C6102 타오위안 13:35 → 인천 17:00' }
+        ]
+      },
+      {
+        id: 'lj',
+        group: 'secondary',
+        name: '진에어',
+        code: 'LJ',
+        routes: ['tpe', 'rmq'],
+        headerBg: 'bg-[#94b816]',
+        borderCol: 'border-lime-200',
+        badgeBg: 'bg-lime-50 text-lime-900 border-lime-200',
+        routeLabel: '인천 ↔ 타오위안 / 타이중 (3박 4일)',
+        mealText: '기내식 불포함',
+        mealClass: 'bg-white text-lime-800',
+        specialBadge: null,
+        logoMain: 'image_89bae3.png',
+        logoOnline: 'https://commons.wikimedia.org/wiki/Special:FilePath/Logo_Jin_Air.png',
+        logoBg: 'bg-[#bfd730]',
+        logoPad: 'px-2',
+        fallbackHtml: '<svg viewBox="0 0 124 28" class="w-full h-5"><path d="M16 14 L8 8 L11 14 L8 20 Z" fill="#00A1E9"/><path d="M16 14 L24 8 L21 14 L24 20 Z" fill="#5D1949"/><text x="31" y="19" font-family="Inter,sans-serif" font-weight="900" font-size="13.5" fill="#5D1949" letter-spacing="0.8">JIN<tspan fill="#00A1E9">AIR</tspan></text></svg>',
+        flights: [
+          { out: 'LJ171 인천 09:35 → 타오위안 11:30', back: 'LJ172 타오위안 12:40 → 인천 16:10' },
+          { out: 'LJ185 인천 07:50 → 타이중 09:50', back: 'LJ186 타이중 10:50 → 인천 14:30' }
+        ]
+      },
+      {
+        id: 'tw',
+        group: 'secondary',
+        name: '트리니티항공',
+        code: 'TW',
+        routes: ['tsa', 'rmq'],
+        headerBg: 'bg-stone-600',
+        borderCol: 'border-stone-200',
+        badgeBg: 'bg-stone-100 text-stone-800 border-stone-200',
+        routeLabel: '김포 ↔ 송산 / 인천 ↔ 타이중 (3박 4일)',
+        mealText: '기내식 불포함',
+        mealClass: 'bg-white text-stone-700',
+        specialBadge: null,
+        logoMain: 'https://commons.wikimedia.org/wiki/Special:FilePath/Trinity_Airways.svg',
+        logoOnline: 'https://commons.wikimedia.org/wiki/Special:FilePath/T%27way_Air_logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 120 28" class="w-full h-5"><polygon points="10,9 22,9 16,20" fill="#B45309"/><text x="28" y="18.5" font-family="Inter,sans-serif" font-weight="800" font-size="12" fill="#44403C" letter-spacing="0.6">TRINITY</text></svg>',
+        flights: [
+          { out: 'TW669 김포 11:10 → 송산 12:50', back: 'TW670 송산 13:50 → 김포 17:25' },
+          { out: 'TW671 인천 14:25 → 타이중 16:25', back: 'TW672 타이중 17:25 → 인천 21:05' }
+        ]
+      },
+      {
+        id: 'ze',
+        group: 'secondary',
+        name: '이스타항공',
+        code: 'ZE',
+        routes: ['tpe', 'tsa'],
+        headerBg: 'bg-red-700',
+        borderCol: 'border-red-200',
+        badgeBg: 'bg-red-50 text-red-800 border-red-200',
+        routeLabel: '인천 ↔ 타오위안 / 김포 ↔ 송산 (3박 4일)',
+        mealText: '기내식 불포함',
+        mealClass: 'bg-white text-red-700',
+        specialBadge: null,
+        logoMain: 'https://commons.wikimedia.org/wiki/Special:FilePath/Eastar_Jet_Logo.svg',
+        logoOnline: 'https://en.wikipedia.org/wiki/Special:FilePath/Eastar_Jet_Logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 128 28" class="w-full h-5"><polygon points="14,6 16.5,11.5 22,12 18,16 19,21.5 14,18.5 9,21.5 10,16 6,12 11.5,11.5" fill="#DC2626"/><text x="27" y="18.5" font-family="Inter,sans-serif" font-weight="800" font-size="11.5" fill="#B91C1C" letter-spacing="0.5">EASTAR JET</text></svg>',
+        flights: [
+          { out: 'ZE881 인천 07:45 → 타오위안 09:35', back: 'ZE882 타오위안 10:35 → 인천 14:05' },
+          { out: 'ZE887 김포 11:25 → 송산 13:05', back: 'ZE888 송산 14:05 → 김포 17:40' }
+        ]
+      },
+      {
+        id: 'tr',
+        group: 'secondary',
+        name: '스쿠트항공',
+        code: 'TR',
+        routes: ['tpe'],
+        headerBg: 'bg-amber-500',
+        borderCol: 'border-amber-200',
+        badgeBg: 'bg-amber-50 text-amber-900 border-amber-200',
+        routeLabel: '인천 ↔ 타오위안 (보잉 787 · 밤 출발)',
+        mealText: '기내식 불포함',
+        mealClass: 'bg-white text-amber-800',
+        specialBadge: null,
+        logoMain: 'https://commons.wikimedia.org/wiki/Special:FilePath/Scoot_logo.svg',
+        logoOnline: 'https://en.wikipedia.org/wiki/Special:FilePath/Scoot_logo.svg',
+        logoBg: 'bg-white',
+        logoPad: 'px-2.5',
+        fallbackHtml: '<svg viewBox="0 0 110 28" class="w-full h-5"><circle cx="55" cy="14" r="12" fill="#FACC15"/><text x="55" y="18.5" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" font-size="13" fill="#18181B">scoot</text></svg>',
+        flights: [
+          { out: 'TR873 인천 22:55 → 타오위안 00:45(+1)', back: 'TR872 타오위안 18:10 → 인천 21:35' }
+        ]
+      }
+    ];
+
+    var isMoreAirlinesOpen = false;
+    var currentAirFilter = 'all';
+
+    function buildAirlineCard(air, extraClass) {
+      var cardExtra = extraClass || '';
+      var specialHtml = '';
+      if (air.specialBadge) {
+        specialHtml =
+          '<div class="w-[176px] sm:w-[194px] px-2.5 py-1.5 rounded-xl bg-amber-300 text-slate-900 text-center leading-tight shadow-sm shrink-0">' +
+            '<div class="text-[11px] font-extrabold">' + air.specialBadge.title + '</div>' +
+            '<div class="text-[10px] font-bold tracking-tight mt-0.5 leading-snug">' + air.specialBadge.sub + '</div>' +
+          '</div>';
+      }
+
+      var flightsHtml = air.flights.map(function(f) {
+        return (
+          '<div class="bg-slate-50 rounded-xl px-3.5 py-2.5 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">' +
+            '<div class="font-bold text-slate-700"><span class="text-sky-600 mr-1.5">출국 🛫</span>' + f.out + '</div>' +
+            '<div class="font-bold text-slate-700"><span class="text-rose-600 mr-1.5">귀국 🛬</span>' + f.back + '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      return (
+        '<article class="bg-white rounded-2xl overflow-hidden border ' + air.borderCol + ' shadow-sm flex flex-col ' + cardExtra + '">' +
+          '<div class="' + air.headerBg + ' px-4 py-3 flex items-center justify-between gap-2 text-white shrink-0">' +
+            '<div class="flex items-center gap-2.5 min-w-0">' +
+              '<div class="w-24 sm:w-28 h-9 rounded-xl ' + air.logoBg + ' ' + air.logoPad + ' flex items-center justify-center shrink-0 shadow-xs overflow-hidden">' +
+                '<img src="' + air.logoMain + '" data-online="' + air.logoOnline + '" onerror="window.handleLogoFallback(this)" alt="' + air.name + '" class="max-h-6 max-w-full object-contain" />' +
+                '<div class="logo-svg-fallback hidden w-full flex items-center justify-center">' + air.fallbackHtml + '</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-1.5 min-w-0">' +
+                '<h3 class="text-base font-extrabold whitespace-nowrap">' + air.name + '</h3>' +
+                '<span class="px-1.5 py-0.5 rounded bg-white/20 text-[11px] font-bold">' + air.code + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="flex items-center gap-2 shrink-0">' +
+              specialHtml +
+              '<span class="px-3 py-1.5 rounded-full ' + air.mealClass + ' text-[11px] font-extrabold whitespace-nowrap shadow-xs">' + air.mealText + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="p-4 flex-1 flex flex-col justify-center gap-2.5">' +
+            '<div class="flex items-center justify-between gap-2">' +
+              '<span class="inline-block px-3 py-1 rounded-full border ' + air.badgeBg + ' text-xs font-bold">' + air.routeLabel + '</span>' +
+            '</div>' +
+            '<div class="space-y-2">' + flightsHtml + '</div>' +
+          '</div>' +
+        '</article>'
+      );
+    }
+
+    function renderAirlines() {
+      var primaryGrid = document.getElementById('primary-airlines-grid');
+      var secondaryGrid = document.getElementById('secondary-airlines-grid');
+      var toggleWrap = document.getElementById('secondary-airlines-toggle-wrap');
+      if (!primaryGrid || !secondaryGrid) return;
+
+      var filtered = AIRLINES.filter(function(a) {
+        return currentAirFilter === 'all' || a.routes.indexOf(currentAirFilter) !== -1;
+      });
+
+      var primaryList = filtered.filter(function(a) { return a.group === 'primary'; });
+      var secondaryList = filtered.filter(function(a) { return a.group === 'secondary'; });
+
+      // 좌측 열: 대한항공(1개) / 우측 열: 중화항공 + 제주항공(2개 스택)으로 묶어 전체 높이 동일하게 정렬
+      var keAir = primaryList.find(function(a) { return a.id === 'ke'; });
+      var rightStack = primaryList.filter(function(a) { return a.id !== 'ke'; });
+
+      if (keAir && rightStack.length >= 2) {
+        primaryGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch';
+        primaryGrid.innerHTML =
+          buildAirlineCard(keAir, 'h-full') +
+          '<div class="flex flex-col gap-5 h-full">' +
+            rightStack.map(function(air) { return buildAirlineCard(air, 'flex-1'); }).join('') +
+          '</div>';
+      } else {
+        primaryGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch';
+        primaryGrid.innerHTML = primaryList.map(function(air) { return buildAirlineCard(air, 'h-full'); }).join('');
+      }
+
+      secondaryGrid.innerHTML = secondaryList.map(function(air) { return buildAirlineCard(air, ''); }).join('');
+
+      if (currentAirFilter === 'all') {
+        if (toggleWrap) toggleWrap.classList.remove('hidden');
+        secondaryGrid.classList.toggle('hidden', !isMoreAirlinesOpen);
+      } else {
+        if (toggleWrap) toggleWrap.classList.add('hidden');
+        secondaryGrid.classList.toggle('hidden', secondaryList.length === 0);
+      }
+    }
+
+    function filterAirlines(route, btn) {
+      currentAirFilter = route;
+      document.querySelectorAll('.air-filter-btn').forEach(function(b) {
+        b.className = 'air-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer';
+      });
+      if (btn) {
+        btn.className = 'air-filter-btn px-4 py-2 rounded-full bg-slate-900 text-white shadow-sm transition cursor-pointer';
+      }
+      renderAirlines();
+    }
+
+    function toggleMoreAirlines() {
+      isMoreAirlinesOpen = !isMoreAirlinesOpen;
+      var secondaryGrid = document.getElementById('secondary-airlines-grid');
+      var textEl = document.getElementById('toggle-more-airlines-text');
+      var iconEl = document.getElementById('toggle-more-airlines-icon');
+      if (secondaryGrid) secondaryGrid.classList.toggle('hidden', !isMoreAirlinesOpen);
+      if (textEl) {
+        textEl.textContent = isMoreAirlinesOpen
+          ? '✈️ 기타 취항 항공사 접기 (진에어 · 트리니티 · 이스타 · 스쿠트)'
+          : '✈️ 기타 취항 항공사 더보기 (진에어 · 트리니티 · 이스타 · 스쿠트 4개사)';
+      }
+      if (iconEl) {
+        iconEl.style.transform = isMoreAirlinesOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    }
+
+    // =========================================================================
+    // 3. SECTION 05 상품 필터, 식사 아코디언, 시그니처 블랙 모달 & 코드 복사
+    // =========================================================================
+    function filterProducts(cat, btn) {
+      document.querySelectorAll('.prod-filter-btn').forEach(function(b) {
+        b.className = 'prod-filter-btn px-3.5 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer';
+      });
+      if (btn) {
+        btn.className = 'prod-filter-btn px-3.5 py-2 rounded-full bg-emerald-700 text-white shadow-sm transition cursor-pointer';
+      }
+      document.querySelectorAll('.product-card').forEach(function(card) {
+        var cardCat = card.getAttribute('data-prod-cat');
+        var show = cat === 'all' || cardCat === cat;
+        card.classList.toggle('hidden', !show);
+      });
+    }
+
+    function toggleMeal(btn) {
+      if (!btn) return;
+      var detail = btn.parentElement.querySelector('.meal-detail');
+      var arrow = btn.querySelector('.meal-arrow');
+      if (!detail) return;
+      var isHidden = detail.classList.contains('hidden');
+      detail.classList.toggle('hidden', !isHidden);
+      if (arrow) {
+        arrow.textContent = isHidden ? '▲' : '▼';
+      }
+    }
+
+    function openBlackModal() {
+      var modal = document.getElementById('black-detail-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeBlackModal() {
+      var modal = document.getElementById('black-detail-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function filterSpots(type, btn) {
+      document.querySelectorAll('.spot-filter-btn').forEach(function(b) {
+        b.className = 'spot-filter-btn px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer';
+      });
+      if (btn) {
+        btn.className = 'spot-filter-btn px-4 py-2 rounded-full bg-emerald-700 text-white shadow-sm transition cursor-pointer';
+      }
+      var cityGroup = document.getElementById('spot-group-city');
+      var suburbGroup = document.getElementById('spot-group-suburb');
+      if (cityGroup) cityGroup.classList.toggle('hidden', type === 'suburb');
+      if (suburbGroup) suburbGroup.classList.toggle('hidden', type === 'city');
+    }
+
+    function copyCode(code) {
+      if (!code) return;
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e) {}
+
+      var toast = document.getElementById('copy-toast');
+      if (toast) {
+        toast.textContent = '상품코드 [' + code + '] 복사 완료!';
+        toast.classList.remove('opacity-0');
+        toast.classList.add('opacity-100');
+        clearTimeout(window.__copyToastTimer);
+        window.__copyToastTimer = setTimeout(function() {
+          toast.classList.remove('opacity-100');
+          toast.classList.add('opacity-0');
+        }, 1800);
+      }
+    }
+
+    // =========================================================================
+    // 4. SECTION 01 Leaflet + Google Maps 지도 (예스지 점선 동선 + 우라이)
+    // =========================================================================
+    var taipeiMap = null;
+    var taipeiMarkers = {};
+
+    var TAIPEI_PINS = {
+      tpe:     { lat: 25.0797, lng: 121.2342, label: '🛬 타오위안 공항 (TPE)', bg: '#0284c7', desc: '인천 출발 주력 국제공항 (시내 차량 약 45~50분)' },
+      tsa:     { lat: 25.0697, lng: 121.5525, label: '🛫 송산 공항 (TSA)',     bg: '#0284c7', desc: '김포 출발 도심 초근접 공항 (시내 차량 약 15~20분)' },
+      main:    { lat: 25.0478, lng: 121.5170, label: '🚉 타이베이역',          bg: '#047857', desc: '타이베이 교통 중심 허브 · 예스지 투어 출발 기점' },
+      ximen:   { lat: 25.0422, lng: 121.5081, label: '🌈 시먼딩',              bg: '#047857', desc: '타이베이 최대 번화가 · 먹거리·쇼핑·마사지 중심' },
+      t101:    { lat: 25.0339, lng: 121.5645, label: '🏙️ 101타워',            bg: '#047857', desc: '신이구 대표 랜드마크 전망대 (높이 508m)' },
+      tamsui:  { lat: 25.1756, lng: 121.4329, label: '🏛️ 단수이',              bg: '#d97706', desc: '홍마오청·옛거리·일몰 명소 (시내에서 약 40분)' },
+      yehliu:  { lat: 25.2059, lng: 121.6902, label: '🪨 예류',                bg: '#d97706', desc: '여왕머리 바위 지질공원 (타이베이역에서 약 50분)' },
+      jiufen:  { lat: 25.1099, lng: 121.8452, label: '🏮 지우펀',              bg: '#d97706', desc: '붉은 홍등과 찻집 골목 (예류에서 약 35분)' },
+      shifen:  { lat: 25.0423, lng: 121.7766, label: '🎈 스펀',                bg: '#d97706', desc: '기찻길 천등 날리기 체험 (지우펀에서 약 30분)' },
+      wulai:   { lat: 24.8648, lng: 121.5513, label: '🌿 우라이',              bg: '#d97706', desc: '80m 절벽 폭포·꼬마열차·원주민 온천마을 (시내 약 50분)' },
+      tianlai: { lat: 25.2036, lng: 121.5945, label: '♨️ 양명산·티엔라이',     bg: '#e11d48', desc: '양명산 국립공원 노천 유황 스파 리조트' },
+      jiaoxi:  { lat: 24.8282, lng: 121.7728, label: '♨️ 이란 자오시 온천',    bg: '#e11d48', desc: '객실 내 프라이빗 탄산 온천 호텔 밀집 권역' }
+    };
+
+    function initTaipeiMap() {
+      var mapEl = document.getElementById('taipei-leaflet-map');
+      if (!mapEl || typeof L === 'undefined') return;
+
+      taipeiMap = L.map('taipei-leaflet-map', {
+        center: [25.05, 121.56],
+        zoom: 10,
+        scrollWheelZoom: false
+      });
+
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+        maxZoom: 18,
+        attribution: '© Google Maps'
+      }).addTo(taipeiMap);
+
+      Object.keys(TAIPEI_PINS).forEach(function(key) {
+        var p = TAIPEI_PINS[key];
+        var icon = L.divIcon({
+          className: '',
+          html: '<div class="custom-pin-label" style="background:' + p.bg + ';">' + p.label + '</div>',
+          iconSize: [0, 0]
+        });
+        var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(taipeiMap);
+        marker.bindPopup('<div style="font-family:Noto Sans KR,sans-serif;padding:2px 4px;"><strong style="font-size:13px;">' + p.label + '</strong><p style="font-size:11.5px;color:#475569;margin-top:4px;">' + p.desc + '</p></div>');
+        taipeiMarkers[key] = marker;
+      });
+
+      // 예스지 순환 동선 (타이베이역 -> 예류 -> 지우펀 -> 스펀 -> 타이베이역)
+      var loopSegments = [
+        { from: TAIPEI_PINS.main,   to: TAIPEI_PINS.yehliu, time: '약 50분' },
+        { from: TAIPEI_PINS.yehliu, to: TAIPEI_PINS.jiufen, time: '약 35분' },
+        { from: TAIPEI_PINS.jiufen, to: TAIPEI_PINS.shifen, time: '약 30분' },
+        { from: TAIPEI_PINS.shifen, to: TAIPEI_PINS.main,   time: '약 50분' }
+      ];
+
+      loopSegments.forEach(function(seg) {
+        L.polyline(
+          [[seg.from.lat, seg.from.lng], [seg.to.lat, seg.to.lng]],
+          { color: '#ea580c', weight: 3, dashArray: '7, 7', opacity: 0.9 }
+        ).addTo(taipeiMap);
+
+        var midLat = (seg.from.lat + seg.to.lat) / 2;
+        var midLng = (seg.from.lng + seg.to.lng) / 2;
+        var timeIcon = L.divIcon({
+          className: '',
+          html: '<div class="route-time-badge">' + seg.time + '</div>',
+          iconSize: [0, 0]
+        });
+        L.marker([midLat, midLng], { icon: timeIcon, interactive: false }).addTo(taipeiMap);
+      });
+    }
+
+    function resetTaipeiMap() {
+      if (taipeiMap) taipeiMap.setView([25.05, 121.56], 10);
+    }
+
+    function zoomTaipeiCity() {
+      if (taipeiMap) taipeiMap.setView([25.045, 121.535], 13);
+    }
+
+    function focusPin(key) {
+      var p = TAIPEI_PINS[key];
+      var m = taipeiMarkers[key];
+      if (taipeiMap && p) {
+        taipeiMap.setView([p.lat, p.lng], 13);
+        if (m) m.openPopup();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      renderAirlines();
+      initTaipeiMap();
+    });
+  </script>
+</body>
+</html>
